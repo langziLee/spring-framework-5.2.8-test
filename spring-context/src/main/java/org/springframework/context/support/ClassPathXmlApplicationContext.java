@@ -139,6 +139,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 			throws BeansException {
 
 		super(parent);
+		// 将配置文件名存到AbstractRefreshableConfigApplicationContext的configLocations属性中，AbstractXmlApplicationContext中会取出
 		setConfigLocations(configLocations);
 		if (refresh) {
 			refresh();
