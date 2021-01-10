@@ -362,20 +362,23 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 
 		do {
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
-
+			// 收集带注解的字段
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
+				// javax.xml.ws.WebServiceRef的注解
 				if (webServiceRefClass != null && field.isAnnotationPresent(webServiceRefClass)) {
 					if (Modifier.isStatic(field.getModifiers())) {
 						throw new IllegalStateException("@WebServiceRef annotation is not supported on static fields");
 					}
 					currElements.add(new WebServiceRefElement(field, field, null));
 				}
+				// javax.ejb.EJB的注解
 				else if (ejbClass != null && field.isAnnotationPresent(ejbClass)) {
 					if (Modifier.isStatic(field.getModifiers())) {
 						throw new IllegalStateException("@EJB annotation is not supported on static fields");
 					}
 					currElements.add(new EjbRefElement(field, field, null));
 				}
+				// Resource的注解
 				else if (field.isAnnotationPresent(Resource.class)) {
 					if (Modifier.isStatic(field.getModifiers())) {
 						throw new IllegalStateException("@Resource annotation is not supported on static fields");
@@ -385,7 +388,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 					}
 				}
 			});
-
+			// 收集带注解的方法
 			ReflectionUtils.doWithLocalMethods(targetClass, method -> {
 				Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);
 				if (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) {

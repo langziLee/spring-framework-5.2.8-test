@@ -568,6 +568,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
+					// 收集注解：  存到injectionMetadataCache(@Resource、@Autowired、 @Value)、lifecycleMetadataCache(@PostContruct、@PreDestroy)中
+					// CommonAnnotationBeanPostProcessor 支持 @Resource @PostContruct @PreDestroy
+					// AutowiredAnnotationBeanPostProcessor 支持@Autowired @Value注解
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
 				catch (Throwable ex) {
@@ -1174,8 +1177,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (instanceSupplier != null) {
 			return obtainFromSupplier(instanceSupplier, beanName);
 		}
-
+		// factoryMethod属性是否有值
 		if (mbd.getFactoryMethodName() != null) {
+			// 实例化有factoryMethod的bean
 			return instantiateUsingFactoryMethod(beanName, mbd, args);
 		}
 
@@ -1198,11 +1202,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				return instantiateBean(beanName, mbd);
 			}
 		}
-
+		// 获取有@Autowried的构造函数
 		// Candidate constructors for autowiring?
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {
+			// 处理有Autowired的构造器
 			return autowireConstructor(beanName, mbd, ctors, args);
 		}
 
@@ -1211,7 +1216,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (ctors != null) {
 			return autowireConstructor(beanName, mbd, ctors, null);
 		}
-
+		// 无参构造函数，实例化
 		// No special handling: simply use no-arg constructor.
 		return instantiateBean(beanName, mbd);
 	}
@@ -1282,9 +1287,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			throws BeansException {
 
 		if (beanClass != null && hasInstantiationAwareBeanPostProcessors()) {
-			for (BeanPostProcessor bp : getBeanPostProcessors()) {
+			for (BeanPostProcessor bp : getBeanPostProcessors()) {  // BeanPostProcessor加载componentScan是加入的
 				if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
 					SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
+					// 加载AutowiredAnnotationBeanPostProcessor获得构造函数
 					Constructor<?>[] ctors = ibp.determineCandidateConstructors(beanClass, beanName);
 					if (ctors != null) {
 						return ctors;

@@ -243,6 +243,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 
 	@Override
 	public void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
+		// 获取注入的元数据
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, beanType, null);
 		metadata.checkConfigMembers(beanDefinition);
 	}
@@ -301,6 +302,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				if (candidateConstructors == null) {
 					Constructor<?>[] rawCandidates;
 					try {
+						// 获取构造函数
 						rawCandidates = beanClass.getDeclaredConstructors();
 					}
 					catch (Throwable ex) {
@@ -320,6 +322,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 						else if (primaryConstructor != null) {
 							continue;
 						}
+						// 查找@Autowried注解
 						MergedAnnotation<?> ann = findAutowiredAnnotation(candidate);
 						if (ann == null) {
 							Class<?> userClass = ClassUtils.getUserClass(beanClass);
@@ -341,6 +344,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 										". Found constructor with 'required' Autowired annotation already: " +
 										requiredConstructor);
 							}
+							// @Autowried注解的required属性， 默认为true
 							boolean required = determineRequiredStatus(ann);
 							if (required) {
 								if (!candidates.isEmpty()) {
@@ -349,7 +353,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 											". Found constructor with 'required' Autowired annotation: " +
 											candidate);
 								}
-								requiredConstructor = candidate;
+								requiredConstructor = candidate;  // 给请求构造函数
 							}
 							candidates.add(candidate);
 						}
@@ -370,8 +374,10 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 										"default constructor to fall back to: " + candidates.get(0));
 							}
 						}
+						// 得到构造函数
 						candidateConstructors = candidates.toArray(new Constructor<?>[0]);
 					}
+					// 如果构造函数一个， 参数个数大于0
 					else if (rawCandidates.length == 1 && rawCandidates[0].getParameterCount() > 0) {
 						candidateConstructors = new Constructor<?>[] {rawCandidates[0]};
 					}
@@ -382,9 +388,11 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					else if (nonSyntheticConstructors == 1 && primaryConstructor != null) {
 						candidateConstructors = new Constructor<?>[] {primaryConstructor};
 					}
+					// 没有有参数构造函数，则获得无参数默认构造函数
 					else {
 						candidateConstructors = new Constructor<?>[0];
 					}
+					// 放在候选构造函数缓存中
 					this.candidateConstructorsCache.put(beanClass, candidateConstructors);
 				}
 			}
@@ -469,8 +477,9 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 
 		do {
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
-
+			// 收集带注解的字段
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
+				// 查看该字段是否有@Autowired 或@Value注解
 				MergedAnnotation<?> ann = findAutowiredAnnotation(field);
 				if (ann != null) {
 					if (Modifier.isStatic(field.getModifiers())) {
@@ -479,12 +488,14 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 						}
 						return;
 					}
+					// @Autowried注解的required属性， 默认为true
 					boolean required = determineRequiredStatus(ann);
 					currElements.add(new AutowiredFieldElement(field, required));
 				}
 			});
-
+			// 收集带注解的方法
 			ReflectionUtils.doWithLocalMethods(targetClass, method -> {
+				// 获取桥方法
 				Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);
 				if (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) {
 					return;
@@ -513,13 +524,14 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			targetClass = targetClass.getSuperclass();
 		}
 		while (targetClass != null && targetClass != Object.class);
-
+		// 通过InjectionMetadata将该类所有带注解属性存储起来
 		return InjectionMetadata.forElements(elements, clazz);
 	}
 
 	@Nullable
 	private MergedAnnotation<?> findAutowiredAnnotation(AccessibleObject ao) {
 		MergedAnnotations annotations = MergedAnnotations.from(ao);
+		// 判断是否有autowiredAnnotationTypes里的注解 （@Autowired @Value）
 		for (Class<? extends Annotation> type : this.autowiredAnnotationTypes) {
 			MergedAnnotation<?> annotation = annotations.get(type);
 			if (annotation.isPresent()) {

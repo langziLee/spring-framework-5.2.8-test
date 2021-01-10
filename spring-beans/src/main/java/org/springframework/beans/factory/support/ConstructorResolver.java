@@ -180,7 +180,7 @@ class ConstructorResolver {
 					return bw;
 				}
 			}
-
+			// 判断是否是@AutoWired的构造函数
 			// Need to resolve the constructor.
 			boolean autowiring = (chosenCtors != null ||
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
@@ -195,15 +195,15 @@ class ConstructorResolver {
 				resolvedValues = new ConstructorArgumentValues();
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
-
+			// 排序 （根据参数函数个数排序）
 			AutowireUtils.sortConstructors(candidates);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Constructor<?>> ambiguousConstructors = null;
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
 			for (Constructor<?> candidate : candidates) {
-				int parameterCount = candidate.getParameterCount();
-
+				int parameterCount = candidate.getParameterCount(); // 参数的个数
+				// 如果多个构造函数，只会实例化一个
 				if (constructorToUse != null && argsToUse != null && argsToUse.length > parameterCount) {
 					// Already found greedy constructor that can be satisfied ->
 					// do not look any further, there are only less greedy constructors left.
@@ -217,13 +217,16 @@ class ConstructorResolver {
 				Class<?>[] paramTypes = candidate.getParameterTypes();
 				if (resolvedValues != null) {
 					try {
+						// 查看是否有@ConstructorProperties注解，设置参数别名
 						String[] paramNames = ConstructorPropertiesChecker.evaluate(candidate, parameterCount);
 						if (paramNames == null) {
+							// 获得构造函数入参的名称
 							ParameterNameDiscoverer pnd = this.beanFactory.getParameterNameDiscoverer();
 							if (pnd != null) {
 								paramNames = pnd.getParameterNames(candidate);
 							}
 						}
+						// 这里会触发参数的getbean操作， 实例化值
 						argsHolder = createArgumentArray(beanName, mbd, resolvedValues, bw, paramTypes, paramNames,
 								getUserDeclaredConstructor(candidate), autowiring, candidates.length == 1);
 					}
@@ -398,7 +401,7 @@ class ConstructorResolver {
 		Object factoryBean;
 		Class<?> factoryClass;
 		boolean isStatic;
-
+		// 获取factoryBeanName的名字 （有实例化方法的类）
 		String factoryBeanName = mbd.getFactoryBeanName();
 		if (factoryBeanName != null) {
 			if (factoryBeanName.equals(beanName)) {
@@ -410,7 +413,7 @@ class ConstructorResolver {
 				throw new ImplicitlyAppearedSingletonException();
 			}
 			factoryClass = factoryBean.getClass();
-			isStatic = false;
+			isStatic = false;  // 不是静态方法
 		}
 		else {
 			// It's a static factory method on the bean class.
@@ -420,7 +423,7 @@ class ConstructorResolver {
 			}
 			factoryBean = null;
 			factoryClass = mbd.getBeanClass();
-			isStatic = true;
+			isStatic = true;  // 必须是静态方法 （因为没有factoryBeanName）
 		}
 
 		Method factoryMethodToUse = null;
@@ -451,7 +454,7 @@ class ConstructorResolver {
 			// Need to determine the factory method...
 			// Try all methods with this name to see if they match the given arguments.
 			factoryClass = ClassUtils.getUserClass(factoryClass);
-
+			// 存factoryBeanName类所有的方法
 			List<Method> candidates = null;
 			if (mbd.isFactoryMethodUnique) {
 				if (factoryMethodToUse == null) {
@@ -465,6 +468,7 @@ class ConstructorResolver {
 				candidates = new ArrayList<>();
 				Method[] rawCandidates = getCandidateMethods(factoryClass, mbd);
 				for (Method candidate : rawCandidates) {
+					// 判断是否匹配 （比较静态标志）
 					if (Modifier.isStatic(candidate.getModifiers()) == isStatic && mbd.isFactoryMethod(candidate)) {
 						candidates.add(candidate);
 					}
@@ -480,6 +484,7 @@ class ConstructorResolver {
 						mbd.constructorArgumentsResolved = true;
 						mbd.resolvedConstructorArguments = EMPTY_ARGS;
 					}
+					// bean的实例化 （invoke 反射）
 					bw.setBeanInstance(instantiate(beanName, mbd, factoryBean, uniqueCandidate, EMPTY_ARGS));
 					return bw;
 				}
@@ -490,6 +495,7 @@ class ConstructorResolver {
 			}
 
 			ConstructorArgumentValues resolvedValues = null;
+			// 判断是否通过构造函数进行依赖注入
 			boolean autowiring = (mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Method> ambiguousFactoryMethods = null;
@@ -785,6 +791,7 @@ class ConstructorResolver {
 							"] - did you specify the correct bean references as arguments?");
 				}
 				try {
+					// 获取参数实例化之后的值
 					Object autowiredArgument = resolveAutowiredArgument(
 							methodParam, beanName, autowiredBeanNames, converter, fallback);
 					args.rawArguments[paramIndex] = autowiredArgument;

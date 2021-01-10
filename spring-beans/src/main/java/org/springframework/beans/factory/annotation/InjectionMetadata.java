@@ -176,11 +176,11 @@ public class InjectionMetadata {
 	 * A single injected element.
 	 */
 	public abstract static class InjectedElement {
-
+		/*元数据信息  字段、方法*/
 		protected final Member member;
-
+		/*是否是字段*/
 		protected final boolean isField;
-
+		/*参数值*/
 		@Nullable
 		protected final PropertyDescriptor pd;
 
