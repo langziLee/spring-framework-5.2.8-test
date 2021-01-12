@@ -1245,7 +1245,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (shortcut != null) {
 				return shortcut;
 			}
-
+			// 属性类型
 			Class<?> type = descriptor.getDependencyType();
 			Object value = getAutowireCandidateResolver().getSuggestedValue(descriptor);
 			if (value != null) {

@@ -356,7 +356,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 								requiredConstructor = candidate;  // 给请求构造函数
 							}
 							candidates.add(candidate);
-						}
+						} // 参数个数为0, 则为默认构造函数
 						else if (candidate.getParameterCount() == 0) {
 							defaultConstructor = candidate;
 						}
@@ -388,7 +388,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					else if (nonSyntheticConstructors == 1 && primaryConstructor != null) {
 						candidateConstructors = new Constructor<?>[] {primaryConstructor};
 					}
-					// 没有有参数构造函数，则获得无参数默认构造函数
+					// 没有满足上面的条件，则获得无参数默认构造函数  candidateConstructors长度为0
 					else {
 						candidateConstructors = new Constructor<?>[0];
 					}
@@ -402,6 +402,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		// 从injectionMetadataCache中找对应的属性
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
 		try {
 			metadata.inject(bean, beanName, pvs);
@@ -648,7 +649,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				Set<String> autowiredBeanNames = new LinkedHashSet<>(1);
 				Assert.state(beanFactory != null, "No BeanFactory available");
 				TypeConverter typeConverter = beanFactory.getTypeConverter();
-				try {
+				try { // 有getbean的操作
 					value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);
 				}
 				catch (BeansException ex) {
@@ -676,7 +677,9 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				}
 			}
 			if (value != null) {
+				// 设置类 field.setAccessible(true);
 				ReflectionUtils.makeAccessible(field);
+				// 赋值
 				field.set(bean, value);
 			}
 		}
