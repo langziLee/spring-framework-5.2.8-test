@@ -73,6 +73,7 @@ public abstract class NamespaceHandlerSupport implements NamespaceHandler {
 		// 根据自定义标签的前缀   获取对应的解析类。
 		BeanDefinitionParser parser = findParserForElement(element, parserContext);
 		// 执行对应的解析方法
+		// 例如： 调用ComponentScanBeanDefinitionParser实现类中的 parse方法
 		return (parser != null ? parser.parse(element, parserContext) : null);
 	}
 
@@ -82,7 +83,9 @@ public abstract class NamespaceHandlerSupport implements NamespaceHandler {
 	 */
 	@Nullable
 	private BeanDefinitionParser findParserForElement(Element element, ParserContext parserContext) {
+		// 获取组件名称
 		String localName = parserContext.getDelegate().getLocalName(element);
+		// Map<String, BeanDefinitionParser> parsers = new HashMap<>()
 		BeanDefinitionParser parser = this.parsers.get(localName);
 		if (parser == null) {
 			parserContext.getReaderContext().fatal(

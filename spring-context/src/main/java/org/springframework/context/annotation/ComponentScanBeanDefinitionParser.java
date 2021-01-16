@@ -89,7 +89,7 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 		// Actually scan for bean definitions and register them.
 		// 创建扫描器
 		ClassPathBeanDefinitionScanner scanner = configureScanner(parserContext, element);
-		// 进行扫描，并且把扫描到的类封装成BeanDefinition
+		// 进行扫描，并且把扫描到的类封装成BeanDefinition （扫描路径.class后缀的文件）
 		Set<BeanDefinitionHolder> beanDefinitions = scanner.doScan(basePackages);
 		// 注册组件
 		registerComponents(parserContext.getReaderContext(), beanDefinitions, element);
@@ -98,8 +98,9 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 	}
 
 	protected ClassPathBeanDefinitionScanner configureScanner(ParserContext parserContext, Element element) {
+		// 是否使用默认过滤器
 		boolean useDefaultFilters = true;
-		// 判断是否有use-default-filters属性
+		//  @Component 默认的过滤器
 		if (element.hasAttribute(USE_DEFAULT_FILTERS_ATTRIBUTE)) {
 			useDefaultFilters = Boolean.parseBoolean(element.getAttribute(USE_DEFAULT_FILTERS_ATTRIBUTE));
 		}

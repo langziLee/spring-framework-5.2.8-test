@@ -429,7 +429,7 @@ public class BeanDefinitionParserDelegate {
 						"' as bean name and " + aliases + " as aliases");
 			}
 		}
-
+		// 检查 beanName 是否重复
 		if (containingBean == null) {
 			checkNameUniqueness(beanName, aliases, ele);
 		}
@@ -513,28 +513,26 @@ public class BeanDefinitionParserDelegate {
 		}
 
 		try {
-			// 创建一个beanDefinition 并把当前类名和父类名赋值进去
+			// 创建一个GenericBeanDefinition 并把当前类名和父类名赋值进去
 			AbstractBeanDefinition bd = createBeanDefinition(className, parent);
-			// 给beanDefinition添加其他的属性   singleton、scope、abstract、lazy-init等
+			// 解析bean标签的属性，并把解析出来的属性设置到BeanDefinition对象中  例： singleton、scope、abstract、lazy-init等
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
-			// 给beanDefinition添加Meta属性
+			// 解析bean中的meta标签
 			parseMetaElements(ele, bd);
-			// 给beanDefinition添加lookup-method属性
+			// 解析bean中的lookup-method标签
 			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
-			// 给beanDefinition添加replaced-method属性
+			// 解析bean中的replaced-method标签
 			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
-
-			// 给beanDefinition添加constructor-arg属性值
+			// 解析bean中的constructor-arg标签
 			parseConstructorArgElements(ele, bd);
-			// 给beanDefinition添加property属性值
+			// 解析bean中的property标签
 			parsePropertyElements(ele, bd);
-			// 给beanDefinition添加qualifier属性值
+			// 解析bean中的qualifier标签
 			parseQualifierElements(ele, bd);
 
 			bd.setResource(this.readerContext.getResource());
 			bd.setSource(extractSource(ele));
-
 			return bd;
 		}
 		catch (ClassNotFoundException ex) {
@@ -1386,17 +1384,20 @@ public class BeanDefinitionParserDelegate {
 	 */
 	@Nullable
 	public BeanDefinition parseCustomElement(Element ele, @Nullable BeanDefinition containingBd) {
-		// 根据自定义标签的前缀（context:component-scan）  获取beans标签xsi:schemaLocation属性值中对应的uri
+		// 根据自定义标签的前缀（例如：context:component-scan）
+		// 获取beans标签xsi:schemaLocation属性值中对应的uri
+		// (http://www.springframework.org/schema/context)
 		String namespaceUri = getNamespaceURI(ele);
 		if (namespaceUri == null) {
 			return null;
 		}
-		// 获取自定义标签的处理器
+		// SPI设计，获取/META-INF/spring.handers中URI对应的Hander处理类
 		NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);
 		if (handler == null) {
 			error("Unable to locate Spring NamespaceHandler for XML schema namespace [" + namespaceUri + "]", ele);
 			return null;
 		}
+		// 执行 实现类NamespaceHandlerSupport 中的parse 方法
 		return handler.parse(ele, new ParserContext(this.readerContext, this, containingBd));
 	}
 

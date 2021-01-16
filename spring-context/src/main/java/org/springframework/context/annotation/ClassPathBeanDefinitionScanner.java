@@ -161,9 +161,10 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		this.registry = registry;
-
+		// 使用默认的过滤器
 		if (useDefaultFilters) {
-			// 添加默认过滤器  component    存到ClassPathScanningCandidateComponentProvider的includeFilters中
+			// 添加默认过滤器  component 、javax.annotation.ManagedBean 、 javax.inject.Named
+			// 存到ClassPathScanningCandidateComponentProvider的includeFilters中
 			registerDefaultFilters();
 		}
 		setEnvironment(environment);
@@ -294,6 +295,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 					definitionHolder =
 							AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 					beanDefinitions.add(definitionHolder);
+					// BeanDefinition的注册
 					registerBeanDefinition(definitionHolder, this.registry);
 				}
 			}

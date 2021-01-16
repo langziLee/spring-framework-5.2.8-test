@@ -93,7 +93,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	@Override
 	public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
 		this.readerContext = readerContext;
-		// 获取根标签（beans标签）， 传入方法
+		// 获取根节点（beans标签）， 传入方法
 		doRegisterBeanDefinitions(doc.getDocumentElement());
 	}
 
@@ -168,8 +168,11 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * @param root the DOM root element of the document
 	 */
 	protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
+		// root是根节点， 判断里是否是beans标签
 		if (delegate.isDefaultNamespace(root)) {
+			// 获取根节点里的所有子节点
 			NodeList nl = root.getChildNodes();
+			// 遍历
 			for (int i = 0; i < nl.getLength(); i++) {
 				Node node = nl.item(i);
 				if (node instanceof Element) {
@@ -186,15 +189,18 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			}
 		}
 		else {
+			// 自定义标签解析
 			delegate.parseCustomElement(root);
 		}
 	}
 
 	private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
 		if (delegate.nodeNameEquals(ele, IMPORT_ELEMENT)) {
+			// import标签解析
 			importBeanDefinitionResource(ele);
 		}
 		else if (delegate.nodeNameEquals(ele, ALIAS_ELEMENT)) {
+			// alias标签解析 别名标签
 			processAliasRegistration(ele);
 		}
 		else if (delegate.nodeNameEquals(ele, BEAN_ELEMENT)) {
@@ -202,6 +208,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			processBeanDefinition(ele, delegate);
 		}
 		else if (delegate.nodeNameEquals(ele, NESTED_BEANS_ELEMENT)) {
+			// beans标签解析
 			// recurse
 			doRegisterBeanDefinitions(ele);
 		}
@@ -312,12 +319,11 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
 		if (bdHolder != null) {
 			// 添加属性（属性前缀）   SPI设计思想   (装饰者设计模式)
-			// xmlns:p="http://www.springframework.org/schema/p"
-			// xmlns:c="http://www.springframework.org/schema/c"
+			// 例如： xmlns:p="http://www.springframework.org/schema/p"
+			// 例如： xmlns:c="http://www.springframework.org/schema/c"
 			bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
 			try {
 				// 注册BeanDefinition  , 就是把注册BeanDefinition放到BeanFactory的beanDefinitionMap属性中
-				// Register the final decorated instance.
 				BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder, getReaderContext().getRegistry());
 			}
 			catch (BeanDefinitionStoreException ex) {

@@ -529,7 +529,6 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// 为上下文容器初始化做准备
-			// Prepare this context for refreshing.
 			prepareRefresh();
 
 			/**
@@ -544,11 +543,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			 * 	    d、调用类的init方法， init方法注册了各种自定义标签的解析类
 			 * 	    e、根据namespaceUri找到对应的解析类，然后调用paser方法完成标签解析
 			 * 3、把解析出来的xml标签封装成BeanDefinition对象
-			 *
 			 */
 			// Tell the subclass to refresh the internal bean factory.
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
+			// 给beanFactory设置一些属性值，可以不看
 			// Prepare the bean factory for use in this context.
 			prepareBeanFactory(beanFactory);
 
@@ -558,30 +557,38 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				// BeanDefinitionRegistryPostProcessor
 				// BeanFactoryPostProcessor
-				// 调用 beanFactory的处理器
+				// 完成对实现以上两个接口类的调用
+				// 激活各种 BeanFactory 处理器
 				// Invoke factory processors registered as beans in the context.
 				invokeBeanFactoryPostProcessors(beanFactory);
+
 				// 把实现BeanPostProcessor接口实例化， 并加入BeanFactory中
-				// 例如ComponentScanBeanDefinitionParser中registerComponents
+				// 例如ComponentScanBeanDefinitionParser中registerComponents方法注册的
 				// CommonAnnotationBeanPostProcessor 、AutowiredAnnotationBeanPostProcessor 等等
 				// Register bean processors that intercept bean creation.
 				registerBeanPostProcessors(beanFactory);
+
 				// 初始化消息源   例如： 国际化
 				// Initialize message source for this context.
 				initMessageSource();
-				// 初始化事件管理器
+
+				// 初始化上下文事件广播器（事件广播和监听机制是典型的观察者模式的实现）
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
+
 				// 钩子方法 （模板设计模式）， 在SpringBoot中，应用于tomcat启动
 				// Initialize other special beans in specific context subclasses.
 				onRefresh();
+
 				// 注册监听事件
 				// Check for listener beans and register them.
 				registerListeners();
-				// BeanDefination的实例化、依赖注入、动态代理
+
+				// BeanDefination的实例化、ioc依赖注入、aop动态代理等等
 				// Instantiate all remaining (non-lazy-init) singletons.
 				finishBeanFactoryInitialization(beanFactory);
-				// 发布ContextRefreshedEvent事件
+
+				// 完成刷新过程,通知生命周期处理器 lifecycleProcessor 刷新过程,同时发出
 				// Last step: publish corresponding event.
 				finishRefresh();
 			}
@@ -667,6 +674,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 模板设计模式 以下两个方法都是钩子方法
+		// 获得Bean工厂
 		refreshBeanFactory();
 		return getBeanFactory();
 	}
@@ -885,6 +894,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * initializing all remaining singleton beans.
 	 */
 	protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+		// 类型转换
 		// Initialize conversion service for this context.
 		if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
 				beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {

@@ -258,7 +258,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 	@Nullable
 	public Constructor<?>[] determineCandidateConstructors(Class<?> beanClass, final String beanName)
 			throws BeanCreationException {
-
+		// Lookup的处理， 基本没用
 		// Let's check for lookup methods here...
 		if (!this.lookupMethodsChecked.contains(beanName)) {
 			if (AnnotationUtils.isCandidateClass(beanClass, Lookup.class)) {
@@ -292,7 +292,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			}
 			this.lookupMethodsChecked.add(beanName);
 		}
-
+		// 获取candidateConstructorsCache中的构造器, 第一次为空
 		// Quick check on the concurrent map first, with minimal locking.
 		Constructor<?>[] candidateConstructors = this.candidateConstructorsCache.get(beanClass);
 		if (candidateConstructors == null) {
@@ -313,6 +313,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					List<Constructor<?>> candidates = new ArrayList<>(rawCandidates.length);
 					Constructor<?> requiredConstructor = null;
 					Constructor<?> defaultConstructor = null;
+					// 获取最优先的构造函数 (基本不用）
 					Constructor<?> primaryConstructor = BeanUtils.findPrimaryConstructor(beanClass);
 					int nonSyntheticConstructors = 0;
 					for (Constructor<?> candidate : rawCandidates) {
@@ -347,13 +348,16 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 							// @Autowried注解的required属性， 默认为true
 							boolean required = determineRequiredStatus(ann);
 							if (required) {
+								// 如果required属性为true, 并且candidates不为空，
+								// 则表示已经有一个带有@Autowried的构造函数实例化了。不允许有第二个
 								if (!candidates.isEmpty()) {
 									throw new BeanCreationException(beanName,
 											"Invalid autowire-marked constructors: " + candidates +
 											". Found constructor with 'required' Autowired annotation: " +
 											candidate);
 								}
-								requiredConstructor = candidate;  // 给请求构造函数
+								// 给请求构造函数
+								requiredConstructor = candidate;
 							}
 							candidates.add(candidate);
 						} // 参数个数为0, 则为默认构造函数
@@ -405,6 +409,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 		// 从injectionMetadataCache中找对应的属性
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
 		try {
+			// 依赖注入调用核心方法
 			metadata.inject(bean, beanName, pvs);
 		}
 		catch (BeanCreationException ex) {
@@ -472,7 +477,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 		if (!AnnotationUtils.isCandidateClass(clazz, this.autowiredAnnotationTypes)) {
 			return InjectionMetadata.EMPTY;
 		}
-
+		// 标记有 @Autowired @Value等注解的元素集合( Field和 Method )
 		List<InjectionMetadata.InjectedElement> elements = new ArrayList<>();
 		Class<?> targetClass = clazz;
 
@@ -524,6 +529,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			elements.addAll(0, currElements);
 			targetClass = targetClass.getSuperclass();
 		}
+		// 除了扫描自己类的@Autowired等注解，还会扫描父类是否有注解
 		while (targetClass != null && targetClass != Object.class);
 		// 通过InjectionMetadata将该类所有带注解属性存储起来
 		return InjectionMetadata.forElements(elements, clazz);
@@ -649,7 +655,8 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				Set<String> autowiredBeanNames = new LinkedHashSet<>(1);
 				Assert.state(beanFactory != null, "No BeanFactory available");
 				TypeConverter typeConverter = beanFactory.getTypeConverter();
-				try { // 有getbean的操作
+				try {
+					// 有getbean的操作
 					value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);
 				}
 				catch (BeansException ex) {

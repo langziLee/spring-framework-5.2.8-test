@@ -126,10 +126,11 @@ public abstract class AbstractXmlApplicationContext extends AbstractRefreshableC
 		if (configResources != null) {
 			reader.loadBeanDefinitions(configResources);
 		}
-		// 取出spring.xml文件名
+		// 取出spring.xml文件名 （目前只有该一个配置文件）
 		String[] configLocations = getConfigLocations();
 		if (configLocations != null) {
-			reader.loadBeanDefinitions(configLocations); // (委托设计模式的运用）
+			// 委托给XmlBeanDefinitionReader来进行解析 (委托设计模式）
+			reader.loadBeanDefinitions(configLocations);
 		}
 	}
 
