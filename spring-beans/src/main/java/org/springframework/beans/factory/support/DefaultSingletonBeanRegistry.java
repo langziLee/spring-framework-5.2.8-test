@@ -140,9 +140,13 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	protected void addSingleton(String beanName, Object singletonObject) {
 		synchronized (this.singletonObjects) {
+			// 一级缓存
 			this.singletonObjects.put(beanName, singletonObject);
+			// 三级缓存
 			this.singletonFactories.remove(beanName);
+			// 二级缓存
 			this.earlySingletonObjects.remove(beanName);
+			// 参与bean的一些统计工作
 			this.registeredSingletons.add(beanName);
 		}
 	}
@@ -158,8 +162,11 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(singletonFactory, "Singleton factory must not be null");
 		synchronized (this.singletonObjects) {
+			// 一级缓存不存在
 			if (!this.singletonObjects.containsKey(beanName)) {
+				// 则放到三级缓存中
 				this.singletonFactories.put(beanName, singletonFactory);
+				// 删除二级缓存
 				this.earlySingletonObjects.remove(beanName);
 				this.registeredSingletons.add(beanName);
 			}
@@ -194,6 +201,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					// 如果三级缓存不为空
 					if (singletonFactory != null) {
+						// 调用的是AbstractAutowireCapableBeanFactory的getEarlyBeanReference方法
 						singletonObject = singletonFactory.getObject();
 						// 将对象放到二级缓存中
 						this.earlySingletonObjects.put(beanName, singletonObject);
@@ -238,7 +246,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					this.suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
-					// 调用singletonFactory中的方法
+					// 调用singletonFactory中的方法, 如果得到singletonObject，则表示已经彻底完成创建
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				}
