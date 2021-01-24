@@ -243,7 +243,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			String name, @Nullable Class<T> requiredType, @Nullable Object[] args, boolean typeCheckOnly)
 			throws BeansException {
 		// 获得beanName。 主要有两种
-		// 1、针对实现了FactoryBean （&开头的BeanName）。
+		// 1、针对实现了FactoryBean （&开头的BeanName）,  则去掉&。
 		// 2、没有&的，则就是当前传进去的name。
 		String beanName = transformedBeanName(name);
 		Object bean;
@@ -263,14 +263,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 			// 该方法是 FactoryBean 接口的调用入口（&开头的BeanName）
 			// 如果是普通 Bean 的话，直接返回 sharedInstance（直接返回对象本身）
-			// 如果是 FactoryBean 的话，返回它创建的那个实例对象(返回指定方法返回的实例)
+			// 如果是 FactoryBean 的话，返回getObject返回的实例对象
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
 
 		else {
 			/**
-			 * TODO : 处理原型模式下循环依赖的问题
-			 * --触发场景：原型模式下，如果存在A中有B属性，B中有A属性，那么当依赖注入的时候，
+			 * TODO : 循环依赖的问题
+			 * --触发场景：模式下，如果存在A中有B属性，B中有A属性，那么当依赖注入的时候，
 			 * 就会产生当A还没创建完的时候，由于对B的创建再次返回创建A，造成循环依赖
 			 *
 			 * 如果 singletonObjects 缓存里面没有，则走下来
@@ -361,6 +361,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					// It's a prototype -> create a new instance.
 					Object prototypeInstance = null;
 					try {
+						// 将要创建的bean添加在prototypesCurrentlyInCreation 中
 						beforePrototypeCreation(beanName);
 						prototypeInstance = createBean(beanName, mbd, args);
 					}
@@ -939,6 +940,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			return null;
 		}
 		String result = value;
+		// embeddedValueResolvers的值由PlaceholderConfigurerSupport类doProcessProperties方法最后一步添加进入
+		// 所以导致resolver.resolveStringValue 会调到PropertySourcesPlaceholderConfigurer类processProperties方法中声明的StringValueResolver匿名内部类中
 		for (StringValueResolver resolver : this.embeddedValueResolvers) {
 			result = resolver.resolveStringValue(result);
 			if (result == null) {
@@ -1819,7 +1822,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 */
 	protected Object getObjectForBeanInstance(
 			Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
-
+		// 判断name是否是&开头，如果是直接返回beanInstance （一级缓存中的实例）
 		// Don't let calling code try to dereference the factory if the bean isn't a factory.
 		if (BeanFactoryUtils.isFactoryDereference(name)) {
 			if (beanInstance instanceof NullBean) {
@@ -1856,6 +1859,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				mbd = getMergedLocalBeanDefinition(beanName);
 			}
 			boolean synthetic = (mbd != null && mbd.isSynthetic());
+			// 调用getObject方法
 			object = getObjectFromFactoryBean(factory, beanName, !synthetic);
 		}
 		return object;
@@ -1902,10 +1906,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	protected void registerDisposableBeanIfNecessary(String beanName, Object bean, RootBeanDefinition mbd) {
 		AccessControlContext acc = (System.getSecurityManager() != null ? getAccessControlContext() : null);
 		if (!mbd.isPrototype() && requiresDestruction(bean, mbd)) {
+			// 单例
 			if (mbd.isSingleton()) {
-				// Register a DisposableBean implementation that performs all destruction
-				// work for the given bean: DestructionAwareBeanPostProcessors,
-				// DisposableBean interface, custom destroy method.
+				// 注册一个销毁的DisposableBeanAdapter对象, 添加到beanFactory的disposableBeans属性中
+				//  DisposableBeanAdapter对象 涉及有destory-method属性的方法、实现了DisposableBean的类、有@PreDestroy注解的方法
 				registerDisposableBean(beanName,
 						new DisposableBeanAdapter(bean, beanName, mbd, getBeanPostProcessors(), acc));
 			}

@@ -79,6 +79,7 @@ public class AnnotationScopeMetadataResolver implements ScopeMetadataResolver {
 		ScopeMetadata metadata = new ScopeMetadata();
 		if (definition instanceof AnnotatedBeanDefinition) {
 			AnnotatedBeanDefinition annDef = (AnnotatedBeanDefinition) definition;
+			// 获取Scope注解   没有则为null
 			AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(
 					annDef.getMetadata(), this.scopeAnnotationType);
 			if (attributes != null) {
@@ -90,6 +91,7 @@ public class AnnotationScopeMetadataResolver implements ScopeMetadataResolver {
 				metadata.setScopedProxyMode(proxyMode);
 			}
 		}
+		// 默认为scopeName = "singleton"   ScopedProxyMode.NO
 		return metadata;
 	}
 

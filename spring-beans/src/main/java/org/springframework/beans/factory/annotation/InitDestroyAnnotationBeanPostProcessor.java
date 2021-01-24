@@ -172,8 +172,11 @@ public class InitDestroyAnnotationBeanPostProcessor
 
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
+		// lifecycleMetadataCache的值在doCreateBean时进行注解装配时，进行收集的
+		// 从lifecycleMetadataCache中得到有@PreDestory注解的方法
 		LifecycleMetadata metadata = findLifecycleMetadata(bean.getClass());
 		try {
+			// 调用
 			metadata.invokeDestroyMethods(bean, beanName);
 		}
 		catch (InvocationTargetException ex) {

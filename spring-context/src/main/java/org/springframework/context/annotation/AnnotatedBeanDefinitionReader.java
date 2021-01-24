@@ -85,6 +85,7 @@ public class AnnotatedBeanDefinitionReader {
 		Assert.notNull(environment, "Environment must not be null");
 		this.registry = registry;
 		this.conditionEvaluator = new ConditionEvaluator(registry, environment, null);
+		// 注册各种BeanPostProcessor、EventListenerMethodProcessor、DefaultEventListenerFactory等等
 		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	}
 
@@ -258,8 +259,9 @@ public class AnnotatedBeanDefinitionReader {
 		abd.setInstanceSupplier(supplier);
 		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
 		abd.setScope(scopeMetadata.getScopeName());
+		// 获取beanName
 		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
-
+		// 普通的beanDefinition注解处理 (就是给beanDefinition填值),  @Lazy, @Primary, @DependsOn, @Role, @Description
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
 		if (qualifiers != null) {
 			for (Class<? extends Annotation> qualifier : qualifiers) {
@@ -282,6 +284,7 @@ public class AnnotatedBeanDefinitionReader {
 
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		// 注册
 		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
 	}
 
@@ -293,6 +296,7 @@ public class AnnotatedBeanDefinitionReader {
 	private static Environment getOrCreateEnvironment(BeanDefinitionRegistry registry) {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		if (registry instanceof EnvironmentCapable) {
+			// 调父类AbstractApplicationContext中getEnvironment方法，主要就是new StandardEnvironment()
 			return ((EnvironmentCapable) registry).getEnvironment();
 		}
 		return new StandardEnvironment();

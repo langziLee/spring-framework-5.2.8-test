@@ -127,6 +127,7 @@ public class PropertyPlaceholderHelper {
 	protected String parseStringValue(
 			String value, PlaceholderResolver placeholderResolver, @Nullable Set<String> visitedPlaceholders) {
 
+		// 看前缀是否是${, 如果不是直接返回
 		int startIndex = value.indexOf(this.placeholderPrefix);
 		if (startIndex == -1) {
 			return value;
@@ -134,6 +135,7 @@ public class PropertyPlaceholderHelper {
 
 		StringBuilder result = new StringBuilder(value);
 		while (startIndex != -1) {
+			// 看后缀是否是}, 如果不是直接返回
 			int endIndex = findPlaceholderEndIndex(result, startIndex);
 			if (endIndex != -1) {
 				String placeholder = result.substring(startIndex + this.placeholderPrefix.length(), endIndex);
@@ -145,15 +147,20 @@ public class PropertyPlaceholderHelper {
 					throw new IllegalArgumentException(
 							"Circular placeholder reference '" + originalPlaceholder + "' in property definitions");
 				}
+				// 递归解析 可能有${${}}
 				// Recursive invocation, parsing placeholders contained in the placeholder key.
 				placeholder = parseStringValue(placeholder, placeholderResolver, visitedPlaceholders);
+				// 获取配置文件中的值，placeholder是 完整${}里面的内容  例{own.name:Lee}  placeholder是own.name:Lee
 				// Now obtain the value for the fully resolved key...
 				String propVal = placeholderResolver.resolvePlaceholder(placeholder);
 				if (propVal == null && this.valueSeparator != null) {
+					// 如果配置文件没有值，则看是否有：
 					int separatorIndex = placeholder.indexOf(this.valueSeparator);
 					if (separatorIndex != -1) {
 						String actualPlaceholder = placeholder.substring(0, separatorIndex);
+						// 获取其 ：之后的值
 						String defaultValue = placeholder.substring(separatorIndex + this.valueSeparator.length());
+						// 获取配置文件中的值，actualPlaceholder是去除：的值  例{own.name:Lee}  actualPlaceholder是own.name
 						propVal = placeholderResolver.resolvePlaceholder(actualPlaceholder);
 						if (propVal == null) {
 							propVal = defaultValue;
@@ -175,6 +182,7 @@ public class PropertyPlaceholderHelper {
 					startIndex = result.indexOf(this.placeholderPrefix, endIndex + this.placeholderSuffix.length());
 				}
 				else {
+					// 常看见没有参数报错的地方
 					throw new IllegalArgumentException("Could not resolve placeholder '" +
 							placeholder + "'" + " in value \"" + value + "\"");
 				}

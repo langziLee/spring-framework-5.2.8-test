@@ -48,6 +48,7 @@ import org.springframework.util.ClassUtils;
  */
 final class ConfigurationClass {
 
+	// 存储元数据
 	private final AnnotationMetadata metadata;
 
 	private final Resource resource;
@@ -55,13 +56,15 @@ final class ConfigurationClass {
 	@Nullable
 	private String beanName;
 
+	// 当前类是内部类,  存储外部类
 	private final Set<ConfigurationClass> importedBy = new LinkedHashSet<>(1);
-
+	// @Bean的方法
 	private final Set<BeanMethod> beanMethods = new LinkedHashSet<>();
 
 	private final Map<String, Class<? extends BeanDefinitionReader>> importedResources =
 			new LinkedHashMap<>();
 
+	// 实现了ImportBeanDefinitionRegistrar接口的实例   和该类的AnnotationMetadata的映射
 	private final Map<ImportBeanDefinitionRegistrar, AnnotationMetadata> importBeanDefinitionRegistrars =
 			new LinkedHashMap<>();
 

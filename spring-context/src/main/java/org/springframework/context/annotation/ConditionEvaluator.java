@@ -148,8 +148,10 @@ class ConditionEvaluator {
 				@Nullable Environment environment, @Nullable ResourceLoader resourceLoader) {
 
 			this.registry = registry;
+			// 主要是new DefaultListableBeanFactory、new DefaultResourceLoader()
 			this.beanFactory = deduceBeanFactory(registry);
 			this.environment = (environment != null ? environment : deduceEnvironment(registry));
+			// new DefaultResourceLoader()
 			this.resourceLoader = (resourceLoader != null ? resourceLoader : deduceResourceLoader(registry));
 			this.classLoader = deduceClassLoader(resourceLoader, this.beanFactory);
 		}
@@ -159,7 +161,9 @@ class ConditionEvaluator {
 			if (source instanceof ConfigurableListableBeanFactory) {
 				return (ConfigurableListableBeanFactory) source;
 			}
+			// AnnotationConfigApplicationContext父类有实现ConfigurableApplicationContext
 			if (source instanceof ConfigurableApplicationContext) {
+				// 得到GenericApplicationContext构造函数中new DefaultListableBeanFactory的BeanFactory
 				return (((ConfigurableApplicationContext) source).getBeanFactory());
 			}
 			return null;
@@ -190,6 +194,7 @@ class ConditionEvaluator {
 				}
 			}
 			if (beanFactory != null) {
+				// spring默认加载器    ClassUtils.getDefaultClassLoader()
 				return beanFactory.getBeanClassLoader();
 			}
 			return ClassUtils.getDefaultClassLoader();

@@ -81,9 +81,12 @@ public class BeanDefinitionVisitor {
 		visitFactoryBeanName(beanDefinition);
 		visitFactoryMethodName(beanDefinition);
 		visitScope(beanDefinition);
+		// 查看beanDefinition是否有PropertyValues
 		if (beanDefinition.hasPropertyValues()) {
+			// 有PropertyValues, 则判断是否是占位符， 如果是进行替换
 			visitPropertyValues(beanDefinition.getPropertyValues());
 		}
+		// 构造函数的占位符
 		if (beanDefinition.hasConstructorArgumentValues()) {
 			ConstructorArgumentValues cas = beanDefinition.getConstructorArgumentValues();
 			visitIndexedArgumentValues(cas.getIndexedArgumentValues());
@@ -144,6 +147,7 @@ public class BeanDefinitionVisitor {
 	protected void visitPropertyValues(MutablePropertyValues pvs) {
 		PropertyValue[] pvArray = pvs.getPropertyValues();
 		for (PropertyValue pv : pvArray) {
+			// 解析
 			Object newVal = resolveValue(pv.getValue());
 			if (!ObjectUtils.nullSafeEquals(newVal, pv.getValue())) {
 				pvs.add(pv.getName(), newVal);
@@ -180,6 +184,7 @@ public class BeanDefinitionVisitor {
 		}
 		else if (value instanceof RuntimeBeanReference) {
 			RuntimeBeanReference ref = (RuntimeBeanReference) value;
+			// 解析
 			String newBeanName = resolveStringValue(ref.getBeanName());
 			if (newBeanName == null) {
 				return null;

@@ -88,13 +88,15 @@ abstract class ConfigurationClassUtils {
 		if (className == null || beanDef.getFactoryMethodName() != null) {
 			return false;
 		}
-
+		// 注解元数据（拥有当前类的几乎所有信息）
 		AnnotationMetadata metadata;
+		// 扫描注解产生的beanDefinition
 		if (beanDef instanceof AnnotatedBeanDefinition &&
 				className.equals(((AnnotatedBeanDefinition) beanDef).getMetadata().getClassName())) {
 			// Can reuse the pre-parsed metadata from the given BeanDefinition...
 			metadata = ((AnnotatedBeanDefinition) beanDef).getMetadata();
 		}
+		// 非扫描注解产生的beanDefinition （只有两个GenericBeanDifinition、RootBeanDifinition）
 		else if (beanDef instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) beanDef).hasBeanClass()) {
 			// Check already loaded Class if present...
 			// since we possibly can't even load the class file for this Class.
@@ -120,18 +122,21 @@ abstract class ConfigurationClassUtils {
 				return false;
 			}
 		}
-
+		// 从metadata中获取@Configuration注解的值， 如果该类没有，则为null
 		Map<String, Object> config = metadata.getAnnotationAttributes(Configuration.class.getName());
 		if (config != null && !Boolean.FALSE.equals(config.get("proxyBeanMethods"))) {
+			// 设置为FULL匹配
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
+		// 在判断是否有@Component、@ComponentScan、@Import、@ImportResource、@Bean注解
 		else if (config != null || isConfigurationCandidate(metadata)) {
+			// 设置为LITE匹配
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}
 		else {
 			return false;
 		}
-
+		// 获取其@Order注解的值
 		// It's a full or lite configuration candidate... Let's determine the order value, if any.
 		Integer order = getOrder(metadata);
 		if (order != null) {
@@ -150,17 +155,19 @@ abstract class ConfigurationClassUtils {
 	 */
 	public static boolean isConfigurationCandidate(AnnotationMetadata metadata) {
 		// Do not consider an interface or an annotation...
+		// 接口直接返回false
 		if (metadata.isInterface()) {
 			return false;
 		}
 
 		// Any of the typical annotations found?
+		// 判断其是否有@Component、@ComponentScan、@Import、@ImportResource
 		for (String indicator : candidateIndicators) {
 			if (metadata.isAnnotated(indicator)) {
 				return true;
 			}
 		}
-
+		// 最后判断是否有@Bean注解的方法
 		// Finally, let's look for @Bean methods...
 		try {
 			return metadata.hasAnnotatedMethods(Bean.class.getName());

@@ -74,6 +74,8 @@ class ComponentScanAnnotationParser {
 
 
 	public Set<BeanDefinitionHolder> parse(AnnotationAttributes componentScan, final String declaringClass) {
+		// 扫描器
+		// 里面有设置默认的过滤器 component 、javax.annotation.ManagedBean 、 javax.inject.Named
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(this.registry,
 				componentScan.getBoolean("useDefaultFilters"), this.environment, this.resourceLoader);
 
@@ -92,12 +94,13 @@ class ComponentScanAnnotationParser {
 		}
 
 		scanner.setResourcePattern(componentScan.getString("resourcePattern"));
-
+		// 添加自定义的过滤类
 		for (AnnotationAttributes filter : componentScan.getAnnotationArray("includeFilters")) {
 			for (TypeFilter typeFilter : typeFiltersFor(filter)) {
 				scanner.addIncludeFilter(typeFilter);
 			}
 		}
+		// 添加不需要过滤的类
 		for (AnnotationAttributes filter : componentScan.getAnnotationArray("excludeFilters")) {
 			for (TypeFilter typeFilter : typeFiltersFor(filter)) {
 				scanner.addExcludeFilter(typeFilter);
@@ -110,12 +113,15 @@ class ComponentScanAnnotationParser {
 		}
 
 		Set<String> basePackages = new LinkedHashSet<>();
+		// 获取basePackages的值
 		String[] basePackagesArray = componentScan.getStringArray("basePackages");
 		for (String pkg : basePackagesArray) {
+			// 解析添加到basePackages中
 			String[] tokenized = StringUtils.tokenizeToStringArray(this.environment.resolvePlaceholders(pkg),
 					ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
 			Collections.addAll(basePackages, tokenized);
 		}
+		// 获取basePackageClasses的值, 并添加到basePackages中
 		for (Class<?> clazz : componentScan.getClassArray("basePackageClasses")) {
 			basePackages.add(ClassUtils.getPackageName(clazz));
 		}
@@ -129,6 +135,7 @@ class ComponentScanAnnotationParser {
 				return declaringClass.equals(className);
 			}
 		});
+		// 扫描的主逻辑
 		return scanner.doScan(StringUtils.toStringArray(basePackages));
 	}
 

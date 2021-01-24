@@ -63,7 +63,12 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
+		// this，就是当前类， AnnotationConfigApplicationContext实现了BeanDefinitionRegistry
+
+		// 主要是一些对象的初始化 new DefaultListableBeanFactory、new DefaultResourceLoader()、new StandardEnvironment()等等
+		// 还注册各种BeanPostProcessor、EventListenerMethodProcessor、DefaultEventListenerFactory等等
 		this.reader = new AnnotatedBeanDefinitionReader(this);
+		// 将@Component等封装成AnnotationTypeFilter包装类  放到includeFilters中
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -84,7 +89,9 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+		// 初始化工作，一些重要类的注册，很重要
 		this();
+		// 传入的componentClasses 一般会有@ComponentScan注解  并对该类进行注册
 		register(componentClasses);
 		refresh();
 	}

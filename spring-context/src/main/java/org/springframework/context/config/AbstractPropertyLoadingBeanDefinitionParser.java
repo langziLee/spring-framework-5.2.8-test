@@ -41,10 +41,12 @@ abstract class AbstractPropertyLoadingBeanDefinitionParser extends AbstractSingl
 
 	@Override
 	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
+		// 解析location属性 （其中存的就是配置文件跟目录）
 		String location = element.getAttribute("location");
 		if (StringUtils.hasLength(location)) {
 			location = parserContext.getReaderContext().getEnvironment().resolvePlaceholders(location);
 			String[] locations = StringUtils.commaDelimitedListToStringArray(location);
+			// 把locations和文件路径包装成PropertyValue 存到propertyValues列表中
 			builder.addPropertyValue("locations", locations);
 		}
 

@@ -124,15 +124,18 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 	 * ignored</strong>. This method is designed to give the user fine-grained control over property
 	 * sources, and once set, the configurer makes no assumptions about adding additional sources.
 	 */
+	// 由于实现了BeanFactoryPostProcessor接口，在AbstractApplicationContext#refresh()中的invokeBeanFactoryPostProcessors进行了该方法的调用
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 		if (this.propertySources == null) {
 			this.propertySources = new MutablePropertySources();
 			if (this.environment != null) {
+				// 把environment封装成PropertySource放到propertySources列表中
 				this.propertySources.addLast(
 					new PropertySource<Environment>(ENVIRONMENT_PROPERTIES_PROPERTY_SOURCE_NAME, this.environment) {
 						@Override
 						@Nullable
+						// source就是environment对象
 						public String getProperty(String key) {
 							return this.source.getProperty(key);
 						}
@@ -140,6 +143,7 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 				);
 			}
 			try {
+				// mergeProperties() 方法进行了配置参数的加载
 				PropertySource<?> localPropertySource =
 						new PropertiesPropertySource(LOCAL_PROPERTIES_PROPERTY_SOURCE_NAME, mergeProperties());
 				if (this.localOverride) {
@@ -153,7 +157,7 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 				throw new BeanInitializationException("Could not load properties", ex);
 			}
 		}
-
+		// Properties的处理 就是将${name:lee} 进行解析
 		processProperties(beanFactory, new PropertySourcesPropertyResolver(this.propertySources));
 		this.appliedPropertySources = this.propertySources;
 	}
@@ -165,11 +169,14 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 	protected void processProperties(ConfigurableListableBeanFactory beanFactoryToProcess,
 			final ConfigurablePropertyResolver propertyResolver) throws BeansException {
 
-		propertyResolver.setPlaceholderPrefix(this.placeholderPrefix);
-		propertyResolver.setPlaceholderSuffix(this.placeholderSuffix);
+		// 占位符前后位
+		propertyResolver.setPlaceholderPrefix(this.placeholderPrefix);  // ${
+		propertyResolver.setPlaceholderSuffix(this.placeholderSuffix);  // }
+		// 分隔符 ：
 		propertyResolver.setValueSeparator(this.valueSeparator);
-
+		// @Value的会调用进入 从AbstractBeanFactory的resolveEmbeddedValue进入
 		StringValueResolver valueResolver = strVal -> {
+			// 注解的解析
 			String resolved = (this.ignoreUnresolvablePlaceholders ?
 					propertyResolver.resolvePlaceholders(strVal) :
 					propertyResolver.resolveRequiredPlaceholders(strVal));
@@ -178,7 +185,7 @@ public class PropertySourcesPlaceholderConfigurer extends PlaceholderConfigurerS
 			}
 			return (resolved.equals(this.nullValue) ? null : resolved);
 		};
-
+		// 把占位符${name:Lee} 替换成真正的值Lee
 		doProcessProperties(beanFactoryToProcess, valueResolver);
 	}
 

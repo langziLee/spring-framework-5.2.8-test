@@ -147,13 +147,15 @@ public abstract class AnnotationConfigUtils {
 	 */
 	public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
-
+		// 主要是new DefaultListableBeanFactory();
 		DefaultListableBeanFactory beanFactory = unwrapDefaultListableBeanFactory(registry);
 		if (beanFactory != null) {
 			if (!(beanFactory.getDependencyComparator() instanceof AnnotationAwareOrderComparator)) {
+				// new AnnotationAwareOrderComparator()
 				beanFactory.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 			}
 			if (!(beanFactory.getAutowireCandidateResolver() instanceof ContextAnnotationAutowireCandidateResolver)) {
+				// new ContextAnnotationAutowireCandidateResolver()
 				beanFactory.setAutowireCandidateResolver(new ContextAnnotationAutowireCandidateResolver());
 			}
 		}
@@ -178,7 +180,7 @@ public abstract class AnnotationConfigUtils {
 			def.setSource(source);
 			beanDefs.add(registerPostProcessor(registry, def, COMMON_ANNOTATION_PROCESSOR_BEAN_NAME));
 		}
-
+		// 注册PersistenceAnnotationBeanPostProcessor
 		// Check for JPA support, and if present add the PersistenceAnnotationBeanPostProcessor.
 		if (jpaPresent && !registry.containsBeanDefinition(PERSISTENCE_ANNOTATION_PROCESSOR_BEAN_NAME)) {
 			RootBeanDefinition def = new RootBeanDefinition();
@@ -223,6 +225,7 @@ public abstract class AnnotationConfigUtils {
 			return (DefaultListableBeanFactory) registry;
 		}
 		else if (registry instanceof GenericApplicationContext) {
+			// new DefaultListableBeanFactory();
 			return ((GenericApplicationContext) registry).getDefaultListableBeanFactory();
 		}
 		else {
@@ -268,6 +271,7 @@ public abstract class AnnotationConfigUtils {
 			ScopeMetadata metadata, BeanDefinitionHolder definition, BeanDefinitionRegistry registry) {
 
 		ScopedProxyMode scopedProxyMode = metadata.getScopedProxyMode();
+		// 单例，是ScopedProxyMode.NO， 直接返回bean
 		if (scopedProxyMode.equals(ScopedProxyMode.NO)) {
 			return definition;
 		}

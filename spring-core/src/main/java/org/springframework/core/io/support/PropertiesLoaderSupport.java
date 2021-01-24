@@ -172,12 +172,14 @@ public abstract class PropertiesLoaderSupport {
 	 * @see #setLocations
 	 */
 	protected void loadProperties(Properties props) throws IOException {
+		// locations 由AbstractPropertyLoadingBeanDefinitionParser解析得来的配置文件
 		if (this.locations != null) {
 			for (Resource location : this.locations) {
 				if (logger.isTraceEnabled()) {
 					logger.trace("Loading properties file from " + location);
 				}
 				try {
+					// 将配置数据加载到props中
 					PropertiesLoaderUtils.fillProperties(
 							props, new EncodedResource(location, this.fileEncoding), this.propertiesPersister);
 				}

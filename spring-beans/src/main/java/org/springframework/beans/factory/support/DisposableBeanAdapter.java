@@ -104,10 +104,12 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 		Assert.notNull(bean, "Disposable bean must not be null");
 		this.bean = bean;
 		this.beanName = beanName;
+		// 实现DisposableBean的类
 		this.invokeDisposableBean =
 				(this.bean instanceof DisposableBean && !beanDefinition.isExternallyManagedDestroyMethod("destroy"));
 		this.nonPublicAccessAllowed = beanDefinition.isNonPublicAccessAllowed();
 		this.acc = acc;
+		// 有destory-method属性方法的名字
 		String destroyMethodName = inferDestroyMethodIfNecessary(bean, beanDefinition);
 		if (destroyMethodName != null && !(this.invokeDisposableBean && "destroy".equals(destroyMethodName)) &&
 				!beanDefinition.isExternallyManagedDestroyMethod(destroyMethodName)) {
@@ -133,6 +135,8 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 			}
 			this.destroyMethod = destroyMethod;
 		}
+
+		// 得到CommonAnnotationBeanPostProcessor （因为它实现了DestructionAwareBeanPostProcessor， 并且其中有对@PreDestroy的收集）
 		this.beanPostProcessors = filterPostProcessors(postProcessors, bean);
 	}
 
@@ -239,6 +243,8 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 	public void destroy() {
 		if (!CollectionUtils.isEmpty(this.beanPostProcessors)) {
 			for (DestructionAwareBeanPostProcessor processor : this.beanPostProcessors) {
+				// 调用InitDestroyAnnotationBeanPostProcessor的postProcessBeforeDestruction方法
+				// InitDestroyAnnotationBeanPostProcessor的子类是CommonAnnotationBeanPostProcessor
 				processor.postProcessBeforeDestruction(this.bean, this.beanName);
 			}
 		}
@@ -250,11 +256,13 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 			try {
 				if (System.getSecurityManager() != null) {
 					AccessController.doPrivileged((PrivilegedExceptionAction<Object>) () -> {
+						// 调用实现DisposableBean接口类的destroy方法
 						((DisposableBean) this.bean).destroy();
 						return null;
 					}, this.acc);
 				}
 				else {
+					// 调用实现DisposableBean接口类的destroy方法
 					((DisposableBean) this.bean).destroy();
 				}
 			}
@@ -270,11 +278,13 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 		}
 
 		if (this.destroyMethod != null) {
+			// 调用destroy_Method属性的方法
 			invokeCustomDestroyMethod(this.destroyMethod);
 		}
 		else if (this.destroyMethodName != null) {
 			Method methodToInvoke = determineDestroyMethod(this.destroyMethodName);
 			if (methodToInvoke != null) {
+				// 调用destroy_Method属性的方法
 				invokeCustomDestroyMethod(ClassUtils.getInterfaceMethodIfPossible(methodToInvoke));
 			}
 		}
@@ -328,6 +338,7 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 				});
 				try {
 					AccessController.doPrivileged((PrivilegedExceptionAction<Object>) () ->
+							// 调用destroy_Method属性的方法
 						destroyMethod.invoke(this.bean, args), this.acc);
 				}
 				catch (PrivilegedActionException pax) {
@@ -336,6 +347,7 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 			}
 			else {
 				ReflectionUtils.makeAccessible(destroyMethod);
+				// 调用destroy_Method属性的方法
 				destroyMethod.invoke(this.bean, args);
 			}
 		}

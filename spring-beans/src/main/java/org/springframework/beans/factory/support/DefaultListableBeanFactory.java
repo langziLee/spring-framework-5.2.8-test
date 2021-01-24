@@ -878,6 +878,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
 				// 判断是否实现了FactoryBean接口
 				if (isFactoryBean(beanName)) {
+					// beanName前面加上&前缀
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					if (bean instanceof FactoryBean) {
 						FactoryBean<?> factory = (FactoryBean<?>) bean;
@@ -1225,6 +1226,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			return new Jsr330Factory().createDependencyProvider(descriptor, requestingBeanName);
 		}
 		else {
+			// 如果有@Lazy注解，则直接得到代理对象
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);
 			if (result == null) {
