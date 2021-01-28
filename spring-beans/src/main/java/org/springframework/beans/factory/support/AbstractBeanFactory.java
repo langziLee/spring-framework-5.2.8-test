@@ -270,7 +270,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		else {
 			/**
 			 * TODO : 循环依赖的问题
-			 * --触发场景：模式下，如果存在A中有B属性，B中有A属性，那么当依赖注入的时候，
+			 * --触发场景：多例模式下，如果存在A中有B属性，B中有A属性，那么当依赖注入的时候，
 			 * 就会产生当A还没创建完的时候，由于对B的创建再次返回创建A，造成循环依赖
 			 *
 			 * 如果 singletonObjects 缓存里面没有，则走下来
@@ -382,6 +382,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 						throw new IllegalStateException("No Scope registered for scope name '" + scopeName + "'");
 					}
 					try {
+						// 调用scope的get方法
 						Object scopedInstance = scope.get(beanName, () -> {
 							beforePrototypeCreation(beanName);
 							try {

@@ -56,11 +56,13 @@ final class ConfigurationClass {
 	@Nullable
 	private String beanName;
 
-	// 当前类是内部类,  存储外部类
+	// 当前类是带注解的内部类,  存储外部类
+	// 当前类是@Import注解导入的类 ，  有@Import的类
 	private final Set<ConfigurationClass> importedBy = new LinkedHashSet<>(1);
 	// @Bean的方法
 	private final Set<BeanMethod> beanMethods = new LinkedHashSet<>();
 
+	// 实现@ImportResource注解的
 	private final Map<String, Class<? extends BeanDefinitionReader>> importedResources =
 			new LinkedHashMap<>();
 

@@ -61,6 +61,9 @@ public abstract class AnnotationConfigUtils {
 
 	/**
 	 * The bean name of the internally managed Configuration annotation processor.
+	 *
+	 * ConfigurationClassPostProcessor
+	 *
 	 */
 	public static final String CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME =
 			"org.springframework.context.annotation.internalConfigurationAnnotationProcessor";
@@ -78,6 +81,9 @@ public abstract class AnnotationConfigUtils {
 
 	/**
 	 * The bean name of the internally managed Autowired annotation processor.
+	 *
+	 * AutowiredAnnotationBeanPostProcessor
+	 *
 	 */
 	public static final String AUTOWIRED_ANNOTATION_PROCESSOR_BEAN_NAME =
 			"org.springframework.context.annotation.internalAutowiredAnnotationProcessor";
@@ -98,6 +104,8 @@ public abstract class AnnotationConfigUtils {
 
 	/**
 	 * The bean name of the internally managed JPA annotation processor.
+	 *
+	 * PersistenceAnnotationBeanPostProcessor
 	 */
 	public static final String PERSISTENCE_ANNOTATION_PROCESSOR_BEAN_NAME =
 			"org.springframework.context.annotation.internalPersistenceAnnotationProcessor";
@@ -107,12 +115,18 @@ public abstract class AnnotationConfigUtils {
 
 	/**
 	 * The bean name of the internally managed @EventListener annotation processor.
+	 *
+	 * EventListenerMethodProcessor
+	 *
 	 */
 	public static final String EVENT_LISTENER_PROCESSOR_BEAN_NAME =
 			"org.springframework.context.event.internalEventListenerProcessor";
 
 	/**
 	 * The bean name of the internally managed EventListenerFactory.
+	 *
+	 * DefaultEventListenerFactory
+	 *
 	 */
 	public static final String EVENT_LISTENER_FACTORY_BEAN_NAME =
 			"org.springframework.context.event.internalEventListenerFactory";

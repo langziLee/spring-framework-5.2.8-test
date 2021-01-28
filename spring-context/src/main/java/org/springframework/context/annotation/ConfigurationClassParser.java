@@ -254,6 +254,7 @@ class ConfigurationClassParser {
 		}
 		while (sourceClass != null);
 
+		// 放入configurationClasses中，解析之后加载到beanFacotry中
 		this.configurationClasses.put(configClass, configClass);
 	}
 
@@ -299,7 +300,7 @@ class ConfigurationClassParser {
 				!this.conditionEvaluator.shouldSkip(sourceClass.getMetadata(), ConfigurationPhase.REGISTER_BEAN)) {
 			// 遍历
 			for (AnnotationAttributes componentScan : componentScans) {
-				// componentScans的解析主流程
+				// componentScans的解析主流程， 并且完成了扫描到bean的注册
 				// The config class is annotated with @ComponentScan -> perform the scan immediately
 				Set<BeanDefinitionHolder> scannedBeanDefinitions =
 						this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
@@ -335,13 +336,15 @@ class ConfigurationClassParser {
 				configClass.addImportedResource(resolvedResource, readerClass);
 			}
 		}
-
+		// @Bean方法的处理
+		// 收集有@Bean的方法
 		// Process individual @Bean methods
 		Set<MethodMetadata> beanMethods = retrieveBeanMethodMetadata(sourceClass);
 		for (MethodMetadata methodMetadata : beanMethods) {
+			// 存到beanMethods属性中， 解析结束后加载到BeanFacory中
 			configClass.addBeanMethod(new BeanMethod(methodMetadata, configClass));
 		}
-
+		// 处理实现接口中的@Bean方法， 也添加到 beanMethods属性中
 		// Process default methods on interfaces
 		processInterfaces(configClass, sourceClass);
 
@@ -387,7 +390,7 @@ class ConfigurationClassParser {
 					this.importStack.push(configClass);
 					try {
 						// 处理ConfigurationClass （递归）
-						// asConfigClass 中将外部类添加到importedBy
+						// asConfigClass 中将外部类添加到  importedBy
 						processConfigurationClass(candidate.asConfigClass(configClass), filter);
 					}
 					finally {
@@ -403,9 +406,12 @@ class ConfigurationClassParser {
 	 */
 	private void processInterfaces(ConfigurationClass configClass, SourceClass sourceClass) throws IOException {
 		for (SourceClass ifc : sourceClass.getInterfaces()) {
+			// 获取@Bean的方法
 			Set<MethodMetadata> beanMethods = retrieveBeanMethodMetadata(ifc);
 			for (MethodMetadata methodMetadata : beanMethods) {
+				// 不是抽象的
 				if (!methodMetadata.isAbstract()) {
+					// 添加到beanMethods属性中
 					// A default method or other concrete method on a Java 8+ interface...
 					configClass.addBeanMethod(new BeanMethod(methodMetadata, configClass));
 				}
@@ -419,6 +425,7 @@ class ConfigurationClassParser {
 	 */
 	private Set<MethodMetadata> retrieveBeanMethodMetadata(SourceClass sourceClass) {
 		AnnotationMetadata original = sourceClass.getMetadata();
+		// 获取@Bean的方法
 		Set<MethodMetadata> beanMethods = original.getAnnotatedMethods(Bean.class.getName());
 		if (beanMethods.size() > 1 && original instanceof StandardAnnotationMetadata) {
 			// Try reading the class file via ASM for deterministic declaration order...
@@ -636,7 +643,7 @@ class ConfigurationClassParser {
 						ImportBeanDefinitionRegistrar registrar =
 								ParserStrategyUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class,
 										this.environment, this.resourceLoader, this.registry);
-						// 加入到importBeanDefinitionRegistrars容器，
+						// 加入到importBeanDefinitionRegistrars属性容器，
 						// 目前没有调用内部方法，因为其内部方法可以对所有beanDifiniton进行修改
 						// 而调用内部方法registerBeanDefinitions的位置是  processConfigBeanDefinitions解析之后的this.reader.loadBeanDefinitions中
 						configClass.addImportBeanDefinitionRegistrar(registrar, currentSourceClass.getMetadata());
@@ -647,6 +654,7 @@ class ConfigurationClassParser {
 						this.importStack.registerImport(
 								currentSourceClass.getMetadata(), candidate.getMetadata().getClassName());
 						// 都不是，则走这里   递归调用（看是否有其他注解）
+						// asConfigClass  加入到importedBy中
 						processConfigurationClass(candidate.asConfigClass(configClass), exclusionFilter);
 					}
 				}
